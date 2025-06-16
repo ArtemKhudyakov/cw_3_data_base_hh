@@ -1,22 +1,22 @@
 import json
-import os
-import pathlib as p
-from typing import Any, Dict, Union
+
+# import os
+# import pathlib as p
+from typing import Any, Dict, Optional
 
 import requests
 
 
 class HeadHunterApi:
     """
-        Класс для работы с API HeadHunter
-        """
+    Класс для работы с API HeadHunter
+    """
 
     def __init__(self, employer: str, params: Dict[str, Any]) -> None:
         self.__base_url = "https://api.hh.ru"
         self.__params = params
         self.__employer = employer
         self.headers = {"User-Agent": "HH-User-Agent"}
-
 
     def __repr__(self) -> str:
         """Возвращает строковое представление объекта"""
@@ -41,7 +41,7 @@ class HeadHunterApi:
     #     return
 
     @staticmethod
-    def employer_name()->Dict[str, Any]:
+    def employer_name() -> Dict[str, Any]:
         """Статический метод для поиска работодателя"""
         text = input("\nВведите название компании\n")
         return {"text": text}
@@ -78,12 +78,11 @@ class HeadHunterApi:
         return params
 
     @staticmethod
-    def set_employers_params (employer_name, page_view) -> Dict[str, Any]:
+    def set_employers_params(employer_name: Dict[str, Any], page_view: Dict[str, Any]) -> Dict[str, Any]:
         params = {**employer_name, **page_view}
         return params
 
-
-    def load_employers(self):
+    def load_employers(self) -> Any:
         url = f"{self.__base_url}/employers"
 
         try:
@@ -106,10 +105,11 @@ class HeadHunterApi:
 
         return employers
 
-
-    def load_employer_vacancies(self) -> Dict[str, Any]:
-        employer_id = input("\nВведите id компании для просмотра вакансий\n")
-        params = HeadHunterApi.page_view()
+    def load_employer_vacancies(self, employer_id: str = '', params: Optional[Dict[str, Any]] = None) -> Any:
+        if not employer_id:
+            employer_id = input("\nВведите id компании для просмотра вакансий\n")
+        if not params:
+            params = HeadHunterApi.page_view()
 
         url = f"{self.__base_url}/vacancies?employer_id={employer_id}"
 
@@ -134,16 +134,18 @@ class HeadHunterApi:
 
         return vacancies
 
+
 if __name__ == "__main__":
     emp1_name = HeadHunterApi.employer_name()
     emp1_name_str = emp1_name["text"]
     page_view = HeadHunterApi.page_view()
     params = HeadHunterApi.set_employers_params(emp1_name, page_view)
     emp1 = HeadHunterApi(emp1_name_str, params)
+    print(emp1.params)
     emp_data = emp1.load_employers()
     for emp in emp_data["items"]:
         print(emp)
-        print("="*120)
+        print("=" * 120)
 
     print("=" * 120)
     print("=" * 120)
