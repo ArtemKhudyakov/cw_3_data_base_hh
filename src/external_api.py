@@ -3,7 +3,7 @@ import json
 # import os
 # import pathlib as p
 from typing import Any, Dict, Optional
-
+from src.viewer import APIViewer
 import requests
 
 
@@ -143,15 +143,19 @@ if __name__ == "__main__":
     emp1 = HeadHunterApi(emp1_name_str, params)
     print(emp1.params)
     emp_data = emp1.load_employers()
-    for emp in emp_data["items"]:
-        print(emp)
-        print("=" * 120)
+    employers_list = emp_data["items"]
+    APIViewer.print_employers_list(employers_list)
+    # for emp in emp_data["items"]:
+    #     print(emp)
+    #     print("=" * 120)
 
     print("=" * 120)
     print("=" * 120)
     print("=" * 120)
 
     vacancies = emp1.load_employer_vacancies()
+    # Viewer.print_vacancies(vacancies)
     for vacancy in vacancies["items"]:
-        print(vacancy)
-        print("=" * 120)
+        # print(vacancy)
+        # print("=" * 120)
+        APIViewer.print_vacancy(vacancy)

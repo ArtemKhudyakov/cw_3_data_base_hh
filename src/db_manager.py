@@ -2,6 +2,7 @@ import os
 import pathlib as p
 import time
 from typing import Dict, Optional
+from src.viewer import APIViewer, DBViewer
 
 import psycopg2
 from dotenv import load_dotenv
@@ -151,7 +152,7 @@ class DBManager:
             conn.rollback()
             print(f"Ошибка при добавлении данных: {e}")
 
-    def fill_vacancies_table(
+    def fill_default_vacancies_table(
         self,
         vacancies_table: str,
         employers_table: str,
@@ -247,6 +248,98 @@ class DBManager:
                 continue
 
         print(f"\nВсего обработано вакансий: {total_vacancies}")
+
+    def update_employer_vacancies(
+            self,
+            vacancies_table: str,
+            employer_id: str,
+            cur: psycopg2.extensions.cursor,
+            conn: psycopg2.extensions.connection,
+            per_page: int = 100  # Количество вакансий на странице (макс. 100 по API HH)
+    ) -> None:
+        """Обновляет вакансии только для указанного работодателя"""
+
+        if not employer_id:
+            print("Не указан ID работодателя")
+            return
+
+        conn.autocommit = True
+        total_vacancies = 0
+
+        try:
+            page = 0
+            while True:
+                hh_api = HeadHunterApi("", {"employer_id": employer_id})
+                vacancies_data = hh_api.load_employer_vacancies(
+                    employer_id, {"page": str(page), "per_page": str(per_page)}
+                )
+
+                if not vacancies_data.get("items"):
+                    if page == 0:
+                        print(f"Для работодателя {employer_id} не найдено вакансий")
+                    break
+
+                for vacancy in vacancies_data["items"]:
+                    data = {
+                        "hh_id": vacancy["id"],
+                        "employer_id": employer_id,
+                        "name": vacancy["name"],
+                        "salary_from": vacancy["salary"]["from"] if vacancy.get("salary") else None,
+                        "salary_to": vacancy["salary"]["to"] if vacancy.get("salary") else None,
+                        "currency": vacancy["salary"]["currency"] if vacancy.get("salary") else None,
+                        "url": vacancy["alternate_url"],
+                        "requirements": vacancy["snippet"]["requirement"],
+                        "responsibility": vacancy["snippet"]["responsibility"],
+                        "published_at": vacancy["published_at"],
+                    }
+
+                    # Проверяем существование записи
+                    cur.execute(f"SELECT 1 FROM {vacancies_table} WHERE hh_id = %s", (data["hh_id"],))
+                    exists = cur.fetchone()
+
+                    if exists:
+                        query = f"""UPDATE {vacancies_table}
+                        SET name = %s, salary_from = %s, salary_to = %s, currency = %s,
+                        url = %s, requirements = %s, responsibility = %s, published_at = %s
+                        WHERE hh_id = %s"""
+                        cur.execute(
+                            query,
+                            (
+                                data["name"],
+                                data["salary_from"],
+                                data["salary_to"],
+                                data["currency"],
+                                data["url"],
+                                data["requirements"],
+                                data["responsibility"],
+                                data["published_at"],
+                                data["hh_id"],
+                            ),
+                        )
+                    else:
+                        columns = ", ".join(data.keys())
+                        values = ", ".join(["%s"] * len(data))
+                        query = f"INSERT INTO {vacancies_table} ({columns}) VALUES ({values})"
+                        cur.execute(query, tuple(data.values()))
+
+                count = len(vacancies_data["items"])
+                total_vacancies += count
+                print(f"Добавлено/обновлено {count} вакансий для работодателя {employer_id} (страница {page + 1})")
+
+                # Проверяем, есть ли еще страницы
+                pages = vacancies_data.get("pages", 0)
+                if page >= pages - 1:
+                    break
+                page += 1
+                if page > 0 and page % 10 == 0:
+                    time.sleep(5)  # Увеличенная пауза
+                else:
+                    time.sleep(0.3)  # Обычная пауза
+
+        except Exception as e:
+            print(f"Ошибка при обработке вакансий для работодателя {employer_id}: {e}")
+
+        print(f"\nВсего обработано вакансий для работодателя {employer_id}: {total_vacancies}")
 
     def get_companies_with_vacancies_count(self, cur: psycopg2.extensions.cursor) -> list[tuple]:
         """
@@ -475,29 +568,33 @@ if __name__ == "__main__":
     )
     test1.fill_vacancies_table(vac_table, emp_table, cur, conn)
     companies = test1.get_companies_with_vacancies_count(cur)
+    DBViewer.print_companies_with_vacancies(companies)
     for company in companies:
         print(f"Компания: {company[0]}, Вакансий: {company[1]}")
 
     all_vacancies = test1.get_all_vacancies(cur)
-    for v in all_vacancies:
-        print(v)
+    DBViewer.print_vacancies(all_vacancies)
+    # for v in all_vacancies:
+    #     print(v)
     avg_salary = test1.get_avg_salary(cur)
-    print("=" * 200)
-    print("=" * 200)
-    print("=" * 200)
+    print("=" * 150)
+    print("=" * 150)
 
     print(avg_salary)
-    print("=" * 200)
-    print("=" * 200)
-    print("=" * 200)
+    print("=" * 150)
+    print("=" * 150)
+
 
     higher_salary = test1.get_vacancies_with_higher_salary(cur)
+    DBViewer.print_vacancies(higher_salary)
     print(len(higher_salary))
-    for v in higher_salary:
-        print(v)
-
+    # for v in higher_salary:
+    #     print(v)
+    print("=" * 150)
+    print("=" * 150)
     vacancies_by_keyword = test1.get_vacancies_with_keyword(cur, keyword="python")
-    for vacancies in vacancies_by_keyword:
-        print(vacancies)
+    DBViewer.print_vacancies(vacancies_by_keyword)
+    # for vacancies in vacancies_by_keyword:
+    #     print(vacancies)
 
     test1.close_db(cur, conn)

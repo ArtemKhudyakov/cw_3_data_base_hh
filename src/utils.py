@@ -3,9 +3,9 @@ import psycopg2
 from src.db_manager import DBManager
 
 
-def create_default_db(
+def fill_default_db(
     data_base: DBManager, cur: psycopg2.extensions.cursor, conn: psycopg2.extensions.connection
-) -> None:
+) -> tuple[str, str]:
     emp_table = data_base.create_table(
         "employers",
         {
@@ -47,13 +47,15 @@ def create_default_db(
         constraints=["FOREIGN KEY (employer_id) REFERENCES employers(hh_id)"],
     )
 
-    data_base.fill_vacancies_table(vac_table, emp_table, cur, conn)
+    data_base.fill_default_vacancies_table(vac_table, emp_table, cur, conn)
+    return emp_table, vac_table
 
 
 if __name__ == "__main__":
     hh_db = DBManager(db_name="hh_employers_db")
+    hh_db.create_db()
     cur, conn = hh_db.connect_to_db()
-    # create_default_db(hh_db, cur, conn)
+    fill_default_db(hh_db, cur, conn)
 
     companies = hh_db.get_companies_with_vacancies_count(cur)
     for company in companies:
