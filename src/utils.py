@@ -6,6 +6,7 @@ from src.db_manager import DBManager
 def fill_default_db(
     data_base: DBManager, cur: psycopg2.extensions.cursor, conn: psycopg2.extensions.connection
 ) -> tuple[str, str]:
+    """Заполнение базы данных по умолчанию"""
     emp_table = data_base.create_table(
         "employers",
         {

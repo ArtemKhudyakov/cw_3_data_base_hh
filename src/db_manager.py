@@ -10,7 +10,10 @@ from src.external_api import HeadHunterApi
 
 
 class DBManager:
+    """Класс менеджер базы данных. Позволяет создавать базы данных, подключаться к базе данных, создавать
+    таблицы и заполнять их данными"""
     def __init__(self, db_name: str, host: str = "localhost", user: str = "postgres", port: str = "5432") -> None:
+        """Создание объекта класса DBManager"""
         current_file_path = p.Path(__file__).resolve()
         project_root_path = current_file_path.parent.parent
         load_dotenv(dotenv_path=f"{project_root_path}/.env", encoding="utf-8")
@@ -21,20 +24,25 @@ class DBManager:
         self.__port: str = port
 
     def __repr__(self) -> str:
+        """Возвращает строковое представление объекта"""
         return f"DBManager(db_name={self.__db_name}, host={self.__host}, user={self.__user})"
 
     def __str__(self) -> str:
+        """Возвращает строковое представление объекта"""
         return self.__repr__()
 
     @property
     def password(self) -> Optional[str]:
+        """Просмоторщик установленного пароля для подключения к базе данных"""
         return self.__password
 
     @password.setter
     def password(self, password: str) -> None:
+        """Задает пароль для подключения к базе данных"""
         self.__password = password
 
     def create_db(self) -> None:
+        """Метод создания базы данных"""
 
         conn = psycopg2.connect(
             database="postgres", password=self.__password, user=self.__user, host=self.__host, port=self.__port
@@ -58,6 +66,7 @@ class DBManager:
             conn.close()
 
     def connect_to_db(self) -> tuple[psycopg2.extensions.cursor, psycopg2.extensions.connection]:
+        """Метод подключения к базе данных"""
         conn = psycopg2.connect(
             database=self.__db_name, password=self.__password, user=self.__user, host=self.__host, port=self.__port
         )
@@ -66,6 +75,7 @@ class DBManager:
         return cur, conn
 
     def close_db(self, cur: psycopg2.extensions.cursor, conn: psycopg2.extensions.connection) -> None:
+        """Метод разрыва соединения с базой данных"""
         cur.close()
         conn.close()
         print("Соединение с базой данных закрыто")
@@ -78,11 +88,7 @@ class DBManager:
         conn: psycopg2.extensions.connection,
         constraints: Optional[list[str]] = None,
     ) -> str:
-        """Создание таблицы с указанными колонками и ограничениями:
-        param columns: Словарь {имя_колонки: тип_данных}
-        Пример: {'id': 'SERIAL PRIMARY KEY', 'name': 'VARCHAR(50)'}
-        param constraints: Список ограничений (FOREIGN KEY и др.)
-        Пример: ['FOREIGN KEY (employer_id) REFERENCES employers(hh_id)']"""
+        """Создание таблицы с указанными колонками и ограничениями"""
 
         conn.autocommit = True
 
@@ -117,6 +123,7 @@ class DBManager:
         cur: psycopg2.extensions.cursor,
         conn: psycopg2.extensions.connection,
     ) -> None:
+        """Метод заполнения таблицы работодателей"""
         employer = HeadHunterApi(emp_name, {"text": f"{emp_name}", "page": "0", "per_page": "100"})
         employers_data = employer.load_employers()
         data = {}
@@ -341,11 +348,7 @@ class DBManager:
         print(f"\nВсего обработано вакансий для работодателя {employer_id}: {total_vacancies}")
 
     def get_companies_with_vacancies_count(self, cur: psycopg2.extensions.cursor) -> list[tuple]:
-        """
-        Получает список всех компаний и количество вакансий у каждой компании
-
-        :return: Список кортежей вида (название_компании, количество_вакансий)
-        """
+        """Получает список всех компаний и количество вакансий у каждой компании"""
         try:
             query = """
                 SELECT e.name, COUNT(v.hh_id) as vacancies_count
@@ -362,13 +365,11 @@ class DBManager:
             return []
 
     def get_all_vacancies(self, cur: psycopg2.extensions.cursor) -> list[dict]:
-        """
-        Получает список всех вакансий с указанием:
+        """Получает список всех вакансий с указанием:
         - Название компании
         - Название вакансии
         - Зарплата
         - Ссылка на вакансию
-
         Возвращает: Список словарей с информацией о вакансиях
         """
         try:
@@ -406,12 +407,7 @@ class DBManager:
             return []
 
     def get_avg_salary(self, cur: psycopg2.extensions.cursor) -> float:
-        """
-        Получает среднюю зарплату по всем вакансиям
-
-        :return: Средняя зарплата (среднее между salary_from и salary_to)
-                 или 0, если нет данных о зарплатах
-        """
+        """Получает среднюю зарплату по всем вакансиям"""
         try:
             # SQL-запрос, который вычисляет среднее значение между salary_from и salary_to
             query = """
@@ -435,11 +431,7 @@ class DBManager:
             return 0.0
 
     def get_vacancies_with_higher_salary(self, cur: psycopg2.extensions.cursor) -> list[dict]:
-        """
-        Получает список вакансий с зарплатой выше средней по всем вакансиям
-
-        :return: Список словарей с информацией о вакансиях (компания, должность, зарплата, ссылка)
-        """
+        """Получает список вакансий с зарплатой выше средней по всем вакансиям"""
         try:
             # Сначала получаем среднюю зарплату
             avg_salary = self.get_avg_salary(cur)
@@ -480,13 +472,7 @@ class DBManager:
             return []
 
     def get_vacancies_with_keyword(self, cur: psycopg2.extensions.cursor, keyword: str) -> list[dict]:
-        """
-        Получает список вакансий, в названии которых содержится указанное слово
-
-        :param keyword: Ключевое слово для поиска (например "python")
-        :return: Список словарей с информацией о вакансиях
-                 (компания, должность, зарплата, ссылка)
-        """
+        """Получает список вакансий, в названии которых содержится указанное слово"""
         try:
             # Формируем шаблон поиска (регистронезависимый)
             search_pattern = f"%{keyword.lower()}%"

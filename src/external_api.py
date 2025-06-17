@@ -72,10 +72,12 @@ class HeadHunterApi:
 
     @staticmethod
     def set_employers_params(employer_name: Dict[str, Any], page_view: Dict[str, Any]) -> Dict[str, Any]:
+        """Метод назначения параметров поиска на HH.ru"""
         params = {**employer_name, **page_view}
         return params
 
     def load_employers(self) -> Any:
+        """Метод загрузки информации о работодателях, найденных по параметрам поиска"""
         url = f"{self.__base_url}/employers"
 
         try:
@@ -99,6 +101,7 @@ class HeadHunterApi:
         return employers
 
     def load_employer_vacancies(self, employer_id: str = "", params: Optional[Dict[str, Any]] = None) -> Any:
+        """Метод загрузки вакансий конкретного работодателя"""
         if not employer_id:
             employer_id = input("\nВведите id компании для просмотра вакансий\n")
         if not params:
