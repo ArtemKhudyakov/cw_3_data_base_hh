@@ -12,6 +12,7 @@ from src.external_api import HeadHunterApi
 class DBManager:
     """Класс менеджер базы данных. Позволяет создавать базы данных, подключаться к базе данных, создавать
     таблицы и заполнять их данными"""
+
     def __init__(self, db_name: str, host: str = "localhost", user: str = "postgres", port: str = "5432") -> None:
         """Создание объекта класса DBManager"""
         current_file_path = p.Path(__file__).resolve()
