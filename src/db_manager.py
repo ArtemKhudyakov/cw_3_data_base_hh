@@ -2,7 +2,6 @@ import os
 import pathlib as p
 import time
 from typing import Dict, Optional
-from src.viewer import APIViewer, DBViewer
 
 import psycopg2
 from dotenv import load_dotenv
@@ -250,12 +249,12 @@ class DBManager:
         print(f"\nВсего обработано вакансий: {total_vacancies}")
 
     def update_employer_vacancies(
-            self,
-            vacancies_table: str,
-            employer_id: str,
-            cur: psycopg2.extensions.cursor,
-            conn: psycopg2.extensions.connection,
-            per_page: int = 100  # Количество вакансий на странице (макс. 100 по API HH)
+        self,
+        vacancies_table: str,
+        employer_id: str,
+        cur: psycopg2.extensions.cursor,
+        conn: psycopg2.extensions.connection,
+        per_page: int = 100,  # Количество вакансий на странице (макс. 100 по API HH)
     ) -> None:
         """Обновляет вакансии только для указанного работодателя"""
 
@@ -521,80 +520,3 @@ class DBManager:
         except Exception as e:
             print(f"Ошибка при поиске вакансий по ключевому слову: {e}")
             return []
-
-
-if __name__ == "__main__":
-    test1 = DBManager("test1")
-    test1.create_db()
-    cur, conn = test1.connect_to_db()
-    emp_table = test1.create_table(
-        "employers",
-        {
-            "hh_id": "VARCHAR(20) PRIMARY KEY",  # Используем hh_id как первичный ключ
-            "name": "VARCHAR(100) NOT NULL",
-            "number_of_vacancies": "INT",
-        },
-        cur,
-        conn,
-    )
-    test1.fill_employers_table(emp_table, "Дельтасвар", "1329403", cur, conn)
-    test1.fill_employers_table(emp_table, "ГК ПЛМ Урал", "125474", cur, conn)
-    test1.fill_employers_table(emp_table, "АСКОН", "41144", cur, conn)
-    test1.fill_employers_table(emp_table, "ЧЕЛЯБИНВЕСТБАНК", "1203065", cur, conn)
-    test1.fill_employers_table(emp_table, "Сбер Банк", "829010", cur, conn)
-    test1.fill_employers_table(emp_table, "Doubletapp", "3096092", cur, conn)
-    test1.fill_employers_table(emp_table, "Онлайн-школа Тетрика", "3731347", cur, conn)
-    test1.fill_employers_table(emp_table, "EasyCode", "8977564", cur, conn)
-    test1.fill_employers_table(emp_table, "Яндекс", "1740", cur, conn)
-    test1.fill_employers_table(emp_table, "Газпром автоматизация", "903111", cur, conn)
-
-    vac_table = test1.create_table(
-        "vacancies",
-        {
-            "hh_id": "VARCHAR(20) PRIMARY KEY",
-            "employer_id": "VARCHAR(20) NOT NULL",
-            "name": "VARCHAR(200) NOT NULL",
-            "salary_from": "INT",
-            "salary_to": "INT",
-            "currency": "VARCHAR(10)",
-            "url": "VARCHAR(200)",
-            "requirements": "TEXT",
-            "responsibility": "TEXT",
-            "published_at": "TIMESTAMP",
-        },
-        cur,
-        conn,
-        constraints=["FOREIGN KEY (employer_id) REFERENCES employers(hh_id)"],
-    )
-    test1.fill_vacancies_table(vac_table, emp_table, cur, conn)
-    companies = test1.get_companies_with_vacancies_count(cur)
-    DBViewer.print_companies_with_vacancies(companies)
-    for company in companies:
-        print(f"Компания: {company[0]}, Вакансий: {company[1]}")
-
-    all_vacancies = test1.get_all_vacancies(cur)
-    DBViewer.print_vacancies(all_vacancies)
-    # for v in all_vacancies:
-    #     print(v)
-    avg_salary = test1.get_avg_salary(cur)
-    print("=" * 150)
-    print("=" * 150)
-
-    print(avg_salary)
-    print("=" * 150)
-    print("=" * 150)
-
-
-    higher_salary = test1.get_vacancies_with_higher_salary(cur)
-    DBViewer.print_vacancies(higher_salary)
-    print(len(higher_salary))
-    # for v in higher_salary:
-    #     print(v)
-    print("=" * 150)
-    print("=" * 150)
-    vacancies_by_keyword = test1.get_vacancies_with_keyword(cur, keyword="python")
-    DBViewer.print_vacancies(vacancies_by_keyword)
-    # for vacancies in vacancies_by_keyword:
-    #     print(vacancies)
-
-    test1.close_db(cur, conn)

@@ -49,19 +49,3 @@ def fill_default_db(
 
     data_base.fill_default_vacancies_table(vac_table, emp_table, cur, conn)
     return emp_table, vac_table
-
-
-if __name__ == "__main__":
-    hh_db = DBManager(db_name="hh_employers_db")
-    hh_db.create_db()
-    cur, conn = hh_db.connect_to_db()
-    fill_default_db(hh_db, cur, conn)
-
-    companies = hh_db.get_companies_with_vacancies_count(cur)
-    for company in companies:
-        print(f"Компания: {company[0]}, Вакансий: {company[1]}")
-    all_vacancies = hh_db.get_all_vacancies(cur)
-    for v in all_vacancies:
-        print(v)
-
-    hh_db.close_db(cur, conn)

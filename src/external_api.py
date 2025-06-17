@@ -1,9 +1,6 @@
 import json
-
-# import os
-# import pathlib as p
 from typing import Any, Dict, Optional
-from src.viewer import APIViewer
+
 import requests
 
 
@@ -35,10 +32,6 @@ class HeadHunterApi:
     def params(self) -> Dict[str, Any]:
         """Возвращает введенные параметры поиска"""
         return self.__params
-
-    # @employer.setter
-    # def employer(self, employer: str) -> None:
-    #     return
 
     @staticmethod
     def employer_name() -> Dict[str, Any]:
@@ -105,7 +98,7 @@ class HeadHunterApi:
 
         return employers
 
-    def load_employer_vacancies(self, employer_id: str = '', params: Optional[Dict[str, Any]] = None) -> Any:
+    def load_employer_vacancies(self, employer_id: str = "", params: Optional[Dict[str, Any]] = None) -> Any:
         if not employer_id:
             employer_id = input("\nВведите id компании для просмотра вакансий\n")
         if not params:
@@ -133,29 +126,3 @@ class HeadHunterApi:
             raise
 
         return vacancies
-
-
-if __name__ == "__main__":
-    emp1_name = HeadHunterApi.employer_name()
-    emp1_name_str = emp1_name["text"]
-    page_view = HeadHunterApi.page_view()
-    params = HeadHunterApi.set_employers_params(emp1_name, page_view)
-    emp1 = HeadHunterApi(emp1_name_str, params)
-    print(emp1.params)
-    emp_data = emp1.load_employers()
-    employers_list = emp_data["items"]
-    APIViewer.print_employers_list(employers_list)
-    # for emp in emp_data["items"]:
-    #     print(emp)
-    #     print("=" * 120)
-
-    print("=" * 120)
-    print("=" * 120)
-    print("=" * 120)
-
-    vacancies = emp1.load_employer_vacancies()
-    # Viewer.print_vacancies(vacancies)
-    for vacancy in vacancies["items"]:
-        # print(vacancy)
-        # print("=" * 120)
-        APIViewer.print_vacancy(vacancy)
