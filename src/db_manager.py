@@ -374,7 +374,7 @@ class DBManager:
         try:
             query = """
             SELECT e.name AS company_name, v.name AS vacancy_name, v.salary_from, v.salary_to, v.currency, v.url
-            FROM vacancies v JOIN employers e ON v.employer_id = e.hh_id 
+            FROM vacancies v JOIN employers e ON v.employer_id = e.hh_id
             ORDER BY e.name, v.name"""
 
             cur.execute(query)
@@ -416,14 +416,14 @@ class DBManager:
             # SQL-запрос, который вычисляет среднее значение между salary_from и salary_to
             query = """
             SELECT AVG(
-            CASE WHEN salary_from IS NOT NULL AND 
-            salary_to IS NOT NULL THEN (salary_from + salary_to) / 2 
-            WHEN salary_from IS NOT NULL 
-            THEN salary_from 
-            WHEN salary_to IS NOT NULL 
-            THEN salary_to ELSE NULL END) 
-            as avg_salary FROM vacancies 
-            WHERE salary_from IS NOT NULL 
+            CASE WHEN salary_from IS NOT NULL AND
+            salary_to IS NOT NULL THEN (salary_from + salary_to) / 2
+            WHEN salary_from IS NOT NULL
+            THEN salary_from
+            WHEN salary_to IS NOT NULL
+            THEN salary_to ELSE NULL END)
+            as avg_salary FROM vacancies
+            WHERE salary_from IS NOT NULL
             OR salary_to IS NOT NULL"""
             cur.execute(query)
             result = cur.fetchone()[0]
@@ -448,12 +448,12 @@ class DBManager:
                 return []
 
             # SQL-запрос для поиска вакансий с зарплатой выше средней
-            query = """SELECT e.name AS company_name, v.name AS vacancy_name, 
-            v.salary_from, v.salary_to, v.currency, v.url 
-            FROM vacancies v JOIN employers e ON v.employer_id = e.hh_id 
-            WHERE (v.salary_from > %s OR v.salary_to > %s) 
-            AND (v.salary_from IS NOT NULL OR v.salary_to IS NOT NULL) 
-            ORDER BY GREATEST (COALESCE(v.salary_from, 0), COALESCE(v.salary_to, 0)) 
+            query = """SELECT e.name AS company_name, v.name AS vacancy_name,
+            v.salary_from, v.salary_to, v.currency, v.url
+            FROM vacancies v JOIN employers e ON v.employer_id = e.hh_id
+            WHERE (v.salary_from > %s OR v.salary_to > %s)
+            AND (v.salary_from IS NOT NULL OR v.salary_to IS NOT NULL)
+            ORDER BY GREATEST (COALESCE(v.salary_from, 0), COALESCE(v.salary_to, 0))
             DESC"""
 
             cur.execute(query, (avg_salary, avg_salary))
@@ -491,9 +491,9 @@ class DBManager:
             # Формируем шаблон поиска (регистронезависимый)
             search_pattern = f"%{keyword.lower()}%"
 
-            query = """SELECT e.name AS company_name, v.name AS vacancy_name, 
-            v.salary_from, v.salary_to, v.currency, v.url 
-            FROM vacancies v JOIN employers e ON v.employer_id = e.hh_id 
+            query = """SELECT e.name AS company_name, v.name AS vacancy_name,
+            v.salary_from, v.salary_to, v.currency, v.url
+            FROM vacancies v JOIN employers e ON v.employer_id = e.hh_id
             WHERE LOWER(v.name) LIKE %s OR LOWER(e.name) LIKE %s ORDER BY e.name, v.name"""
 
             cur.execute(query, (search_pattern, search_pattern))
