@@ -65,9 +65,10 @@ def main() -> None:
                 APIViewer.print_vacancy(vacancy)
 
         elif action == "7":
-            emp_name = input("\nВведите наименование компании\n")
+            # emp_name = HeadHunterApi.employer_name()
+            new_emp_name = input("\nВведите наименование компании\n")
             employer_id = input("\nВведите ID компании\n")
-            hh_db.fill_employers_table(emp_table, emp_name, employer_id, cur, conn)
+            hh_db.fill_employers_table(emp_table, new_emp_name, employer_id, cur, conn)
             hh_db.update_employer_vacancies(vac_table, employer_id, cur, conn)
 
         elif action == "8":

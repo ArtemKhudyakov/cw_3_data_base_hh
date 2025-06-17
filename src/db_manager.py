@@ -426,9 +426,9 @@ class DBManager:
             WHERE salary_from IS NOT NULL
             OR salary_to IS NOT NULL"""
             cur.execute(query)
-            result = cur.fetchone()[0]
+            result = cur.fetchone()
 
-            return round(float(result), 2) if result else 0.0
+            return round(float(result[0]), 2) if result else 0.0
 
         except Exception as e:
             print(f"Ошибка при расчете средней зарплаты: {e}")
