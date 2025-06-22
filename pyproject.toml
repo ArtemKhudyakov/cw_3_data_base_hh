@@ -20,12 +20,17 @@ mypy = "^1.16.0"
 flake8 = "^7.2.0"
 isort = "^6.0.1"
 black = "^25.1.0"
+autopep8 = "^2.3.2"
 
 
 [tool.poetry.group.dev.dependencies]
 psycopg2 = "^2.9.10"
 requests = "^2.32.3"
 dotenv = "^0.9.9"
+types-requests = "^2.32.4.20250611"
+types-psycopg2 = "^2.9.21.20250516"
+bs4 = "^0.0.2"
+types-colorama = "^0.4.15.20240311"
 
 
 [tool.poetry.group.tests.dependencies]
